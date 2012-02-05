@@ -3,10 +3,19 @@
  * Javascript fixes, jquery required!
  * Here is everything needed for proper Zend_Form rendering that I couldn't achieve in CSS...
  * @author Wojtek Iskra wojtek@domeq.net
- * @version 1.0.1, 2011-05-05
+ * @version 1.1, 2012-02-05
  */
 
 $(document).ready(function() {
+    initZendFormStyled();
+    
+    $('html').ajaxComplete(function() {
+        initZendFormStyled();
+    });
+});
+
+
+function initZendFormStyled() {
     /**
      * First we check what kind of Zend_Form we're dealing with...
      * It can either be:
@@ -39,10 +48,25 @@ $(document).ready(function() {
         }
     });
 
+    // move all input[type=hidden] to the end of the form and drop their dt/dd containers
+    $("dl.zend_form input[type='hidden']").each(function(index, element) {
+        var hiddenElement = $(element);
+        var parentForm = hiddenElement.parents('form:first');
+        
+        // check if it's not a hidden field connected with a checkbox (from Zend decorator)
+        if (hiddenElement.next("input[type='checkbox']").length == 0 &&
+            hiddenElement.next("input[type='file']").length == 0
+           ) {
+            $(element).parent('dd').prev('dt').remove();
+            $(element).parent('dd').remove();
+            hiddenElement.appendTo(parentForm);
+        }
+    });
+    
     /**
      * Hiding empty dt elements rendered by Zend_Form only for validation purposes.
      */
-    $('form dt').each(function(index, element) {
+    $('form dl.zend_form dt').each(function(index, element) {
         if($(element).html() == '&nbsp;') {
             $(element).hide();
         }
@@ -89,8 +113,4 @@ $(document).ready(function() {
      */
     $("input[type='submit']").parent().addClass('submit-container');
     
-    /**
-     * Hiding dt element with label for hidden input fields - rather useless
-     */
-    $("input[type='hidden']").parent().prev().hide();
-});
+}
